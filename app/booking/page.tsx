@@ -1,4 +1,70 @@
+"use client";
+
+import { useState } from "react";
+
 export default function BookingPage() {
+  const [form, setForm] = useState({
+    fullName: "",
+    contactNumber: "",
+    email: "",
+    vehicleModel: "",
+    vehicleType: "",
+    preferredDate: "",
+    serviceType: "Advanced Diagnostic Bundle",
+    issueDescription: "",
+    serviceAddress: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  function updateField(name: string, value: string) {
+    setForm((prev) => ({ ...prev, [name]: value }));
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setMessage("");
+    setError("");
+
+    try {
+      const res = await fetch("/api/bookings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Something went wrong");
+        setLoading(false);
+        return;
+      }
+
+      setMessage(`Booking submitted successfully. Reference: ${data.booking.id}`);
+      setForm({
+        fullName: "",
+        contactNumber: "",
+        email: "",
+        vehicleModel: "",
+        vehicleType: "",
+        preferredDate: "",
+        serviceType: "Advanced Diagnostic Bundle",
+        issueDescription: "",
+        serviceAddress: "",
+      });
+    } catch {
+      setError("Failed to submit booking");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <main
       style={{
@@ -153,75 +219,10 @@ export default function BookingPage() {
                 </div>
               ))}
             </div>
-
-            <div
-              style={{
-                marginTop: "24px",
-                padding: "18px",
-                borderRadius: "18px",
-                background:
-                  "linear-gradient(135deg, rgba(38,208,255,0.10), rgba(159,107,255,0.12))",
-                border: "1px solid rgba(139,211,255,0.14)",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: "13px",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.12em",
-                  color: "#d7efff",
-                }}
-              >
-                Package Summary
-              </div>
-
-              <div
-                style={{
-                  marginTop: "14px",
-                  display: "grid",
-                  gap: "10px",
-                  color: "#dce8f6",
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span>Base Advanced Diagnostic</span>
-                  <strong>₱2,000</strong>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span>SUV/4x4 adjustment</span>
-                  <strong>+₱500</strong>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span>Mobile service</span>
-                  <strong>+₱700</strong>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span>Outside core area</span>
-                  <strong>+₱300</strong>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span>After-hours</span>
-                  <strong>+₱400</strong>
-                </div>
-              </div>
-
-              <div
-                style={{
-                  marginTop: "16px",
-                  paddingTop: "16px",
-                  borderTop: "1px solid rgba(255,255,255,0.10)",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  fontSize: "18px",
-                }}
-              >
-                <span>Total</span>
-                <strong>₱3,900</strong>
-              </div>
-            </div>
           </div>
 
           <form
+            onSubmit={handleSubmit}
             style={{
               background: "rgba(255,255,255,0.05)",
               border: "1px solid rgba(255,255,255,0.10)",
@@ -259,17 +260,51 @@ export default function BookingPage() {
                 gap: "16px",
               }}
             >
-              <Field label="Full Name" placeholder="Enter full name" />
-              <Field label="Contact Number" placeholder="Enter mobile number" />
-              <Field label="Email Address" placeholder="Enter email address" />
-              <Field label="Vehicle Model" placeholder="e.g. Ford Ranger 2021" />
-              <Field label="Vehicle Type" placeholder="SUV / Sedan / Hatchback" />
-              <Field label="Preferred Date" placeholder="YYYY-MM-DD" />
+              <Field
+                label="Full Name"
+                placeholder="Enter full name"
+                value={form.fullName}
+                onChange={(v) => updateField("fullName", v)}
+              />
+              <Field
+                label="Contact Number"
+                placeholder="Enter mobile number"
+                value={form.contactNumber}
+                onChange={(v) => updateField("contactNumber", v)}
+              />
+              <Field
+                label="Email Address"
+                placeholder="Enter email address"
+                value={form.email}
+                onChange={(v) => updateField("email", v)}
+              />
+              <Field
+                label="Vehicle Model"
+                placeholder="e.g. Ford Ranger 2021"
+                value={form.vehicleModel}
+                onChange={(v) => updateField("vehicleModel", v)}
+              />
+              <Field
+                label="Vehicle Type"
+                placeholder="SUV / Sedan / Hatchback"
+                value={form.vehicleType}
+                onChange={(v) => updateField("vehicleType", v)}
+              />
+              <Field
+                label="Preferred Date"
+                placeholder="YYYY-MM-DD"
+                value={form.preferredDate}
+                onChange={(v) => updateField("preferredDate", v)}
+              />
             </div>
 
             <div style={{ marginTop: "16px" }}>
               <Label text="Service Type" />
-              <select style={selectStyle}>
+              <select
+                value={form.serviceType}
+                onChange={(e) => updateField("serviceType", e.target.value)}
+                style={selectStyle}
+              >
                 <option>Advanced Diagnostic Bundle</option>
                 <option>Shop-Based Diagnostic</option>
                 <option>Mobile Diagnostic</option>
@@ -281,6 +316,8 @@ export default function BookingPage() {
               <Label text="Issue Description" />
               <textarea
                 placeholder="Describe the issue or symptoms"
+                value={form.issueDescription}
+                onChange={(e) => updateField("issueDescription", e.target.value)}
                 style={textAreaStyle}
               />
             </div>
@@ -289,31 +326,47 @@ export default function BookingPage() {
               <Label text="Service Address / Notes" />
               <textarea
                 placeholder="Enter address for mobile service or additional notes"
+                value={form.serviceAddress}
+                onChange={(e) => updateField("serviceAddress", e.target.value)}
                 style={textAreaStyle}
               />
             </div>
 
-            <div
-              style={{
-                marginTop: "20px",
-                padding: "16px",
-                borderRadius: "18px",
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                color: "#dce8f6",
-                fontSize: "14px",
-                lineHeight: 1.8,
-              }}
-            >
-              Deposit required at booking: <strong style={{ color: "#8bd3ff" }}>₱1,950</strong>
-              <br />
-              Accepted payment methods: <strong>GCash, Maya, Card</strong>
-              <br />
-              Cancellation with refund applies with at least <strong>24 hours notice</strong>.
-            </div>
+            {message ? (
+              <div
+                style={{
+                  marginTop: "18px",
+                  padding: "14px 16px",
+                  borderRadius: "16px",
+                  background: "rgba(34,197,94,0.12)",
+                  border: "1px solid rgba(34,197,94,0.25)",
+                  color: "#bbf7d0",
+                  lineHeight: 1.6,
+                }}
+              >
+                {message}
+              </div>
+            ) : null}
+
+            {error ? (
+              <div
+                style={{
+                  marginTop: "18px",
+                  padding: "14px 16px",
+                  borderRadius: "16px",
+                  background: "rgba(239,68,68,0.12)",
+                  border: "1px solid rgba(239,68,68,0.25)",
+                  color: "#fecaca",
+                  lineHeight: 1.6,
+                }}
+              >
+                {error}
+              </div>
+            ) : null}
 
             <button
-              type="button"
+              type="submit"
+              disabled={loading}
               style={{
                 marginTop: "22px",
                 width: "100%",
@@ -325,10 +378,11 @@ export default function BookingPage() {
                 fontWeight: 900,
                 fontSize: "16px",
                 cursor: "pointer",
+                opacity: loading ? 0.7 : 1,
                 boxShadow: "0 12px 30px rgba(30,200,255,0.24)",
               }}
             >
-              Proceed to Deposit Payment
+              {loading ? "Submitting Booking..." : "Submit Booking"}
             </button>
           </form>
         </div>
@@ -356,14 +410,23 @@ function Label({ text }: { text: string }) {
 function Field({
   label,
   placeholder,
+  value,
+  onChange,
 }: {
   label: string;
   placeholder: string;
+  value: string;
+  onChange: (value: string) => void;
 }) {
   return (
     <div>
       <Label text={label} />
-      <input placeholder={placeholder} style={inputStyle} />
+      <input
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        style={inputStyle}
+      />
     </div>
   );
 }
