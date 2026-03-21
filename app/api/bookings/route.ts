@@ -1,10 +1,22 @@
 import { addBooking, getBookings } from "@/lib/bookings";
 
 export async function GET() {
-  return Response.json({
-    success: true,
-    bookings: getBookings(),
-  });
+  try {
+    const bookings = await getBookings();
+
+    return Response.json({
+      success: true,
+      bookings,
+    });
+  } catch {
+    return Response.json(
+      {
+        success: false,
+        message: "Failed to load bookings",
+      },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(req: Request) {
@@ -35,7 +47,7 @@ export async function POST(req: Request) {
       }
     }
 
-    const booking = addBooking({
+    const booking = await addBooking({
       fullName: body.fullName,
       contactNumber: body.contactNumber,
       email: body.email,
