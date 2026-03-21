@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 type Booking = {
   id: string;
-  fullName: string;
+  reference: string;  fullName: string;
   contactNumber: string;
   email: string;
   vehicleModel: string;
