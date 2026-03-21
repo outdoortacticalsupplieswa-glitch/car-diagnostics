@@ -1,5 +1,6 @@
-export type Booking = {
-  id: string;
+import { prisma } from "@/lib/prisma";
+
+export type BookingInput = {
   fullName: string;
   contactNumber: string;
   email: string;
@@ -9,33 +10,23 @@ export type Booking = {
   serviceType: string;
   issueDescription: string;
   serviceAddress: string;
-  createdAt: string;
 };
 
-declare global {
-  // eslint-disable-next-line no-var
-  var __bookings__: Booking[] | undefined;
+export async function getBookings() {
+  return prisma.booking.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
 }
 
-const bookingsStore = global.__bookings__ || [];
+export async function addBooking(data: BookingInput) {
+  const reference = `PAD-${Date.now()}`;
 
-if (!global.__bookings__) {
-  global.__bookings__ = bookingsStore;
-}
-
-export function getBookings() {
-  return bookingsStore;
-}
-
-export function addBooking(
-  data: Omit<Booking, "id" | "createdAt">
-): Booking {
-  const booking: Booking = {
-    id: `PAD-${Date.now()}`,
-    createdAt: new Date().toISOString(),
-    ...data,
-  };
-
-  bookingsStore.unshift(booking);
-  return booking;
+  return prisma.booking.create({
+    data: {
+      reference,
+      ...data,
+    },
+  });
 }
